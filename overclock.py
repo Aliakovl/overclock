@@ -9,6 +9,29 @@ class MainWindow(QtWidgets.QMainWindow):
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.widget = Widget(self)
         self.setCentralWidget(self.widget)
+        self.tray_icon = TrayIcon(self)
+        menu = QtWidgets.QMenu(parent)
+
+        self.hide_action = menu.addAction("Hide")
+        self.hide_action.triggered.connect(self.hide_show)
+
+        # hide_shortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+Q"), self)
+        # self.hide_action.setShortcutContext(QtCore.Qt.ShortcutContext.ApplicationShortcut)
+        # hide_shortcut.activated.connect(self.hide_show)
+
+        exit_action = menu.addAction("Quit")
+        exit_action.triggered.connect(app.exit)
+
+        self.tray_icon.setContextMenu(menu)
+        self.tray_icon.show()
+
+    def hide_show(self):
+        if self.hide_action.text() == "Hide":
+            self.widget.hide()
+            self.hide_action.setText("Show")
+        elif self.hide_action.text() == "Show":
+            self.widget.show()
+            self.hide_action.setText("Hide")
 
 
 class Widget(QtWidgets.QWidget):
@@ -50,6 +73,12 @@ class Widget(QtWidgets.QWidget):
         text_format.setTextOutline(pen)
         self.text_edit.setCurrentCharFormat(text_format)
         self.text_edit.setPlainText(text)
+
+
+class TrayIcon(QtWidgets.QSystemTrayIcon):
+    def __init__(self, parent=None):
+        super(TrayIcon, self).__init__(parent=parent)
+        self.setIcon(QtGui.QIcon("clock.png"))
 
 
 if __name__ == "__main__":
