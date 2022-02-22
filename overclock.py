@@ -1,6 +1,7 @@
 import sys
 from PyQt6 import QtGui, QtCore, QtWidgets
 from PyQt6.QtCore import Qt
+from pynput import keyboard
 
 
 class MainWindow(QtWidgets.QMainWindow):
@@ -10,21 +11,18 @@ class MainWindow(QtWidgets.QMainWindow):
         self.widget = Widget(self)
         self.setCentralWidget(self.widget)
         self.tray_icon = TrayIcon(self)
-        menu = QtWidgets.QMenu(parent)
+        self.menu = QtWidgets.QMenu(parent)
 
-        self.hide_action = menu.addAction("Hide")
+        self.hide_action = self.menu.addAction("Hide")
         self.hide_action.triggered.connect(self.hide_show)
 
-        # hide_shortcut = QtGui.QShortcut(QtGui.QKeySequence("Ctrl+Alt+Q"), self)
-        # self.hide_action.setShortcutContext(QtCore.Qt.ShortcutContext.ApplicationShortcut)
-        # hide_shortcut.activated.connect(self.hide_show)
-
-        exit_action = menu.addAction("Quit")
+        exit_action = self.menu.addAction("Quit")
         exit_action.triggered.connect(app.exit)
 
-        self.tray_icon.setContextMenu(menu)
+        self.tray_icon.setContextMenu(self.menu)
         self.tray_icon.show()
 
+    @QtCore.pyqtSlot()
     def hide_show(self):
         if self.hide_action.text() == "Hide":
             self.widget.hide()
@@ -38,6 +36,7 @@ class Widget(QtWidgets.QWidget):
     def __init__(self, parent):
         super(Widget, self).__init__(parent)
         self.text_edit = QtWidgets.QPlainTextEdit()
+        self.text_edit.setCursor(Qt.CursorShape.BlankCursor)
         self.setStyleSheet(
             """QPlainTextEdit { 
                 color: #2c2c2c;
@@ -81,6 +80,17 @@ class TrayIcon(QtWidgets.QSystemTrayIcon):
         self.setIcon(QtGui.QIcon("clock.png"))
 
 
+class Worker(QtCore.QObject):
+    hk_pressed = QtCore.pyqtSignal()
+
+    @QtCore.pyqtSlot()
+    def global_hot_keys(self):
+        h = keyboard.GlobalHotKeys({
+            '<ctrl>+<alt>+q': self.hk_pressed.emit
+        })
+        h.start()
+
+
 if __name__ == "__main__":
     app = QtWidgets.QApplication(sys.argv)
     screen_geometry = QtGui.QGuiApplication.primaryScreen().geometry()
@@ -102,4 +112,9 @@ if __name__ == "__main__":
         window_height
     )
     main_window.show()
+
+    worker = Worker()
+    worker.hk_pressed.connect(main_window.hide_show)
+    worker.global_hot_keys()
+
     app.exec()
