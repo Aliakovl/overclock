@@ -7,6 +7,7 @@ from pynput import keyboard
 class MainWindow(QtWidgets.QMainWindow):
     def __init__(self, parent=None, flags=Qt.WindowType.Window):
         super(MainWindow, self).__init__(parent, flags=flags)
+        self.setWindowIcon(QtGui.QIcon("clock.svg"))
         self.setAttribute(Qt.WidgetAttribute.WA_TranslucentBackground)
         self.widget = Widget(self)
         self.setCentralWidget(self.widget)
